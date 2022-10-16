@@ -16,8 +16,13 @@ type GridRef struct {
 func (g GridRef) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("%c%d", g.Letter, g.Major))
+
+	if len(g.Keypads) > 0 {
+		b.WriteString("-")
+	}
+
 	for _, kp := range g.Keypads {
-		b.WriteString(fmt.Sprintf(".%d", kp))
+		b.WriteString(fmt.Sprintf("%d", kp))
 	}
 	return b.String()
 }
