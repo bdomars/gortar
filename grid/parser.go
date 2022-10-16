@@ -2,7 +2,6 @@ package grid
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -56,7 +55,6 @@ func (p *parser) parse_letter() (byte, error) {
 func (p *parser) parse_number(big_major bool) (uint8, error) {
 
 	if big_major {
-		fmt.Println("parsing big major")
 		data := p.data[p.idx : p.idx+2]
 		num, err := strconv.ParseUint(string(data), 10, 8)
 
@@ -92,7 +90,6 @@ func (g Grid) Parse(input string) (GridRef, error) {
 	has_separator := false
 	if strings.ContainsRune(input, rune(SEPARATOR)) {
 		has_separator = true
-		fmt.Println("has separator")
 	}
 
 	p := newParser(input, has_separator)

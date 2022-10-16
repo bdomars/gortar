@@ -10,12 +10,14 @@ import (
 
 func main() {
 
-	gridsize := flag.Float64("gridsize", 300.0, "Define a custom grid size")
+	var gridsize float64
+	flag.Float64Var(&gridsize, "grid", 300.0, "Define a custom grid size")
 	flag.Parse()
+
 	base_str := flag.Arg(0)
 	target_str := flag.Arg(1)
 
-	g := grid.NewGrid(*gridsize)
+	g := grid.NewGrid(gridsize)
 
 	base, err := g.Parse(base_str)
 	if err != nil {
