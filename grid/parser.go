@@ -2,7 +2,13 @@ package grid
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
+	"strings"
+)
+
+const (
+	SEPARATOR byte = '-'
 )
 
 type parser struct {
@@ -13,7 +19,7 @@ type parser struct {
 	gr   GridRef
 }
 
-func newParser(input string) parser {
+func newParser(input string, has_separator bool) parser {
 	data := []byte(input)
 	return parser{
 		data: data,
@@ -30,6 +36,9 @@ func (p *parser) advance() error {
 		return EndOfData{}
 	}
 	p.next = p.data[p.idx]
+	if p.next == SEPARATOR {
+		p.advance()
+	}
 	return nil
 }
 
@@ -44,16 +53,34 @@ func (p *parser) parse_letter() (byte, error) {
 	return p.next, nil
 }
 
-func (p *parser) parse_number() (uint8, error) {
-	num, err := strconv.ParseUint(string(p.next), 10, 8)
-	if err != nil {
-		return 0, SyntaxError{
-			pos:   p.idx,
-			token: p.next,
-		}
-	}
+func (p *parser) parse_number(big_major bool) (uint8, error) {
 
-	return uint8(num), nil
+	if big_major {
+		fmt.Println("parsing big major")
+		data := p.data[p.idx : p.idx+2]
+		num, err := strconv.ParseUint(string(data), 10, 8)
+
+		if err != nil {
+			return 0, SyntaxError{
+				pos:   p.idx,
+				token: p.next,
+			}
+		}
+
+		return uint8(num), nil
+
+	} else {
+		num, err := strconv.ParseUint(string(p.next), 10, 8)
+
+		if err != nil {
+			return 0, SyntaxError{
+				pos:   p.idx,
+				token: p.next,
+			}
+		}
+
+		return uint8(num), nil
+	}
 }
 
 func (g Grid) Parse(input string) (GridRef, error) {
@@ -62,7 +89,13 @@ func (g Grid) Parse(input string) (GridRef, error) {
 		return GridRef{}, EndOfData{}
 	}
 
-	p := newParser(input)
+	has_separator := false
+	if strings.ContainsRune(input, rune(SEPARATOR)) {
+		has_separator = true
+		fmt.Println("has separator")
+	}
+
+	p := newParser(input, has_separator)
 	p.gr.Grid = &g
 
 	if letter, err := p.parse_letter(); err != nil {
@@ -76,7 +109,7 @@ func (g Grid) Parse(input string) (GridRef, error) {
 		return GridRef{}, errors.New("syntax error: no major number")
 	}
 
-	num, err := p.parse_number()
+	num, err := p.parse_number(has_separator)
 	if err != nil {
 		return GridRef{}, err
 	}
@@ -91,7 +124,7 @@ func (g Grid) Parse(input string) (GridRef, error) {
 			return GridRef{}, err
 		}
 
-		num, err := p.parse_number()
+		num, err := p.parse_number(false)
 		if err != nil {
 			return GridRef{}, err
 		}
