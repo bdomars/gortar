@@ -16,13 +16,8 @@ type GridRef struct {
 func (g GridRef) String() string {
 	var b strings.Builder
 	b.WriteString(fmt.Sprintf("%c%d", g.Letter, g.Major))
-
-	if len(g.Keypads) > 0 {
-		b.WriteString("-")
-	}
-
 	for _, kp := range g.Keypads {
-		b.WriteString(fmt.Sprintf("%d", kp))
+		b.WriteString(fmt.Sprintf("-%d", kp))
 	}
 	return b.String()
 }
@@ -57,4 +52,27 @@ func kp_to_pos(kp uint8) Position {
 		x: float64((kpint-1)%3 - 1),
 		y: float64(1 - (kpint-1)/3),
 	}
+}
+
+func (this GridRef) EqualTo(other GridRef) bool {
+
+	if this.Letter != other.Letter {
+		return false
+	}
+
+	if this.Major != other.Major {
+		return false
+	}
+
+	if len(this.Keypads) != len(other.Keypads) {
+		return false
+	}
+
+	for i, _ := range this.Keypads {
+		if this.Keypads[i] != other.Keypads[i] {
+			return false
+		}
+	}
+
+	return true
 }
