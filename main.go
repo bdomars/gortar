@@ -34,13 +34,13 @@ func main() {
 	base_pos := base.Position()
 	target_pos := target.Position()
 
-	flight_path := target_pos
-	flight_path.Sub(base_pos)
+	flight_path := target_pos.Sub(base_pos)
+
 	distance := grid.GetDistance(flight_path)
 	angle := grid.GetAngleDegrees(flight_path)
 
-	fmt.Printf("Base is %s at %+v\n", base, base_pos)
-	fmt.Printf("Target is %s at %+v\n", target, target_pos)
+	fmt.Printf("Base is %s\n", base)
+	fmt.Printf("Target is %s\n\n", target)
 
 	fmt.Printf("Distance\t%6.1f m\n", distance)
 

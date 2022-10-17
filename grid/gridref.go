@@ -39,8 +39,8 @@ func (g GridRef) Position() Position {
 	for n, kp := range g.Keypads {
 		subcoord := kp_to_pos(kp)
 		subcoord_scale := base_size / math.Pow(3, float64(n+1))
-		subcoord.Scale(subcoord_scale)
-		p.Add(subcoord)
+		subcoord = subcoord.Scale(subcoord_scale)
+		p = p.Add(subcoord)
 	}
 
 	return p
