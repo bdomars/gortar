@@ -103,7 +103,7 @@ func (p *parser) parseNumber(single bool) (uint8, error) {
 			if len(buffer) == 0 {
 				continue // skip separators in the beginning
 			} else {
-				break // but end when we hit a separator
+				break // but end when we hit a separator following numbers
 			}
 		}
 
