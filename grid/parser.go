@@ -101,9 +101,9 @@ func (p *parser) parseNumber(single bool) (uint8, error) {
 
 		if t.kind == SEPARATOR {
 			if len(buffer) == 0 {
-				continue
+				continue // skip separators in the beginning
 			} else {
-				break
+				break // but end when we hit a separator
 			}
 		}
 

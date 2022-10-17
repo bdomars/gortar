@@ -42,7 +42,7 @@ func main() {
 	fmt.Printf("Base is %s at %+v\n", base, base_pos)
 	fmt.Printf("Target is %s at %+v\n", target, target_pos)
 
-	fmt.Printf("Ditance %.1fm\n", distance)
+	fmt.Printf("Distance\t%6.1f m\n", distance)
 
 	if distance > 1250 {
 		fmt.Printf("Target is out of range.\n")
@@ -52,7 +52,7 @@ func main() {
 		fmt.Printf("Target is too close.\n")
 	}
 
-	fmt.Printf("Angle %.1f\n", angle)
-	fmt.Printf("Mils %.1f\n\n", grid.GetMils(distance))
+	fmt.Printf("Angle\t\t%6.1f °\n", angle)
+	fmt.Printf("Elevation\t%6.1f mil\n\n", grid.GetMils(distance))
 
 }
