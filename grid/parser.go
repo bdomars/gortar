@@ -1,6 +1,9 @@
 package grid
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
 
 type kind uint8
 
@@ -107,6 +110,28 @@ func (p *parser) parseNumber(single bool) (uint8, error) {
 
 func (g Grid) Parse(input string) (GridRef, error) {
 	p := newParser(input)
+
+	if letter, err := p.parseLetter(); err == nil {
+		p.result.Letter = letter
+	} else {
+		return p.result, err
+	}
+
+	if major, err := p.parseNumber(false); err == nil {
+		p.result.Major = major
+	} else {
+		return p.result, err
+	}
+
+	for {
+		kp, err := p.parseNumber(true)
+		if errors.Is(err, EndOfData{}) {
+			break
+		} else if err != nil {
+			return p.result, err
+		}
+		p.result.Keypads = append(p.result.Keypads, kp)
+	}
 
 	p.result.Grid = &g
 	return p.result, nil
