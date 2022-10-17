@@ -14,5 +14,5 @@ type SyntaxError struct {
 }
 
 func (e SyntaxError) Error() string {
-	return fmt.Sprintf("syntax error: failed to parse token '%c' at position %d", e.token, e.pos)
+	return fmt.Sprintf("syntax error: failed to parse token '%c' at position %d", e.token, e.pos+1)
 }

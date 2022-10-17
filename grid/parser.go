@@ -8,7 +8,7 @@ import (
 type kind uint8
 
 const (
-	SEPARATOR kind = iota
+	SEPARATOR kind = iota + 1
 	LETTER
 	NUMBER
 )
@@ -80,8 +80,12 @@ func (p *parser) parseLetter() (byte, error) {
 
 func (p *parser) parseNumber(single bool) (uint8, error) {
 	buffer := make([]byte, 0, 2)
+
+	var t token
+	var err error
+
 	for {
-		t, err := p.takeOne()
+		t, err = p.takeOne()
 
 		if errors.Is(err, EndOfData{}) && len(buffer) > 0 {
 			break
@@ -111,10 +115,15 @@ func (p *parser) parseNumber(single bool) (uint8, error) {
 			break
 		}
 	}
+
 	num, err := strconv.ParseUint(string(buffer), 10, 8)
 	if err != nil {
-		return 0, err
+		return 0, SyntaxError{
+			pos:   t.pos,
+			token: t.data,
+		}
 	}
+
 	return uint8(num), nil
 }
 
