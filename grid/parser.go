@@ -1,5 +1,7 @@
 package grid
 
+import "strconv"
+
 type kind uint8
 
 const (
@@ -70,6 +72,37 @@ func (p *parser) parseLetter() (byte, error) {
 		pos:   t.pos,
 		token: t.data,
 	}
+}
+
+func (p *parser) parseNumber(single bool) (uint8, error) {
+	buffer := make([]byte, 0, 2)
+	for {
+		t, err := p.takeOne()
+		if err != nil {
+			return 0, err
+		}
+
+		if t.kind == NUMBER {
+			buffer = append(buffer, t.data)
+		}
+
+		if t.kind == SEPARATOR {
+			break
+		}
+
+		if len(buffer) == 2 {
+			break
+		}
+
+		if single {
+			break
+		}
+	}
+	num, err := strconv.ParseUint(string(buffer), 10, 8)
+	if err != nil {
+		return 0, err
+	}
+	return uint8(num), nil
 }
 
 func (g Grid) Parse(input string) (GridRef, error) {
