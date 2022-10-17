@@ -68,7 +68,7 @@ func (this GridRef) EqualTo(other GridRef) bool {
 		return false
 	}
 
-	for i, _ := range this.Keypads {
+	for i := range this.Keypads {
 		if this.Keypads[i] != other.Keypads[i] {
 			return false
 		}

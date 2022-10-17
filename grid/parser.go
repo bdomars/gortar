@@ -3,131 +3,146 @@ package grid
 import (
 	"errors"
 	"strconv"
-	"strings"
 )
+
+type kind uint8
 
 const (
-	SEPARATOR byte = '-'
+	SEPARATOR kind = iota
+	LETTER
+	NUMBER
 )
 
-type parser struct {
-	data []byte
-	next byte
-	len  int
-	idx  int
-	gr   GridRef
+type token struct {
+	data byte
+	pos  int
+	kind kind
 }
 
-func newParser(input string, has_separator bool) parser {
+type parser struct {
+	data   []byte
+	pos    int
+	result GridRef
+}
+
+func newParser(input string) parser {
 	data := []byte(input)
 	return parser{
+		data:   data,
+		pos:    0,
+		result: GridRef{},
+	}
+}
+
+func (p *parser) takeOne() (token, error) {
+
+	if p.pos == len(p.data) {
+		return token{}, EndOfData{}
+	}
+
+	token_pos := p.pos
+	var kind kind
+	data := p.data[p.pos]
+	switch {
+	case data >= 'A' && data <= 'Z':
+		kind = LETTER
+	case data >= '0' && data <= '9':
+		kind = NUMBER
+	case data == '-' || data == '.' || data == ',':
+		kind = SEPARATOR
+	}
+
+	p.pos++
+
+	return token{
 		data: data,
-		next: data[0],
-		idx:  0,
-		len:  len(data),
-		gr:   GridRef{},
-	}
+		kind: kind,
+		pos:  token_pos,
+	}, nil
+
 }
 
-func (p *parser) advance() error {
-	p.idx = p.idx + 1
-	if p.idx == p.len {
-		return EndOfData{}
-	}
-	p.next = p.data[p.idx]
-	if p.next == SEPARATOR {
-		p.advance()
-	}
-	return nil
-}
-
-func (p *parser) parse_letter() (byte, error) {
-	if p.next < 'A' || p.next > 'Z' {
-		err := SyntaxError{
-			token: p.next,
-			pos:   p.idx,
-		}
+func (p *parser) parseLetter() (byte, error) {
+	t, err := p.takeOne()
+	if err != nil {
 		return 0, err
 	}
-	return p.next, nil
+
+	if t.kind == LETTER {
+		return t.data, nil
+	}
+
+	return 0, SyntaxError{
+		pos:   t.pos,
+		token: t.data,
+	}
 }
 
-func (p *parser) parse_number(big_major bool) (uint8, error) {
+func (p *parser) parseNumber(single bool) (uint8, error) {
+	buffer := make([]byte, 0, 2)
+	for {
+		t, err := p.takeOne()
 
-	if big_major {
-		data := p.data[p.idx : p.idx+2]
-		num, err := strconv.ParseUint(string(data), 10, 8)
+		if errors.Is(err, EndOfData{}) && len(buffer) > 0 {
+			break
+		}
 
 		if err != nil {
-			return 0, SyntaxError{
-				pos:   p.idx,
-				token: p.next,
+			return 0, err
+		}
+
+		if t.kind == NUMBER {
+			buffer = append(buffer, t.data)
+		}
+
+		if t.kind == SEPARATOR {
+			if len(buffer) == 0 {
+				continue
+			} else {
+				break
 			}
 		}
 
-		return uint8(num), nil
-
-	} else {
-		num, err := strconv.ParseUint(string(p.next), 10, 8)
-
-		if err != nil {
-			return 0, SyntaxError{
-				pos:   p.idx,
-				token: p.next,
-			}
+		if len(buffer) == 2 {
+			break
 		}
 
-		return uint8(num), nil
+		if single {
+			break
+		}
 	}
+	num, err := strconv.ParseUint(string(buffer), 10, 8)
+	if err != nil {
+		return 0, err
+	}
+	return uint8(num), nil
 }
 
 func (g Grid) Parse(input string) (GridRef, error) {
+	p := newParser(input)
 
-	if len(input) < 1 {
-		return GridRef{}, EndOfData{}
-	}
-
-	has_separator := false
-	if strings.ContainsRune(input, rune(SEPARATOR)) {
-		has_separator = true
-	}
-
-	p := newParser(input, has_separator)
-	p.gr.Grid = &g
-
-	if letter, err := p.parse_letter(); err != nil {
-		return GridRef{}, err
+	if letter, err := p.parseLetter(); err == nil {
+		p.result.Letter = letter
 	} else {
-		p.gr.Letter = letter
+		return p.result, err
 	}
 
-	err := p.advance()
-	if err != nil {
-		return GridRef{}, errors.New("syntax error: no major number")
+	if major, err := p.parseNumber(false); err == nil {
+		p.result.Major = major
+	} else {
+		return p.result, err
 	}
-
-	num, err := p.parse_number(has_separator)
-	if err != nil {
-		return GridRef{}, err
-	}
-
-	p.gr.Major = num
 
 	for {
-		err := p.advance()
+		kp, err := p.parseNumber(true)
 		if errors.Is(err, EndOfData{}) {
 			break
 		} else if err != nil {
-			return GridRef{}, err
+			return p.result, err
 		}
-
-		num, err := p.parse_number(false)
-		if err != nil {
-			return GridRef{}, err
-		}
-
-		p.gr.Keypads = append(p.gr.Keypads, num)
+		p.result.Keypads = append(p.result.Keypads, kp)
 	}
 
-	return p.gr, nil
+	p.result.Grid = &g
+	return p.result, nil
 }
