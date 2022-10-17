@@ -40,12 +40,13 @@ func (p *parser) takeOne() (token, error) {
 		return token{}, EndOfData{}
 	}
 
+	token_pos := p.pos
 	var kind kind
 	data := p.data[p.pos]
 	switch {
-	case data > 'A' && data < 'Z':
+	case data >= 'A' && data <= 'Z':
 		kind = LETTER
-	case data >= 0 && data <= 9:
+	case data >= '0' && data <= '9':
 		kind = NUMBER
 	case data == '-' || data == '.' || data == ',':
 		kind = SEPARATOR
@@ -56,7 +57,7 @@ func (p *parser) takeOne() (token, error) {
 	return token{
 		data: data,
 		kind: kind,
-		pos:  p.pos,
+		pos:  token_pos,
 	}, nil
 
 }
@@ -81,6 +82,11 @@ func (p *parser) parseNumber(single bool) (uint8, error) {
 	buffer := make([]byte, 0, 2)
 	for {
 		t, err := p.takeOne()
+
+		if errors.Is(err, EndOfData{}) && len(buffer) > 0 {
+			break
+		}
+
 		if err != nil {
 			return 0, err
 		}
@@ -90,7 +96,11 @@ func (p *parser) parseNumber(single bool) (uint8, error) {
 		}
 
 		if t.kind == SEPARATOR {
-			break
+			if len(buffer) == 0 {
+				continue
+			} else {
+				break
+			}
 		}
 
 		if len(buffer) == 2 {
