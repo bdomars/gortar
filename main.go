@@ -43,8 +43,13 @@ func main() {
 	fmt.Printf("Target is %s at %+v\n", target, target_pos)
 
 	fmt.Printf("Ditance %.1fm\n", distance)
+
 	if distance > 1250 {
 		fmt.Printf("Target is out of range.\n")
+	}
+
+	if distance < 50 {
+		fmt.Printf("Target is too close.\n")
 	}
 
 	fmt.Printf("Angle %.1f\n", angle)
